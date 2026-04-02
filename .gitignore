@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code
+.vscode/
+
+# Ignore PDF files
+*.pdf
+
+# Ignore test file
+test.py
+
+# Ignore ipynb
+*.ipynb
