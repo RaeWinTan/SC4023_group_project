@@ -10,8 +10,11 @@ __pycache__/
 # Ignore PDF files
 *.pdf
 
-# Ignore test file
-test.py
-
 # Ignore ipynb
 *.ipynb
+
+# Ignore all CSV files
+*.csv
+
+# But keep test.csv
+!ResalePricesSingapore.csv
