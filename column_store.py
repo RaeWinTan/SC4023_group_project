@@ -96,9 +96,8 @@ class Indexes(ComparatorFunction):
         return self.get(idx)< rg[1]
 
 class ZoneMap:
-    SPAN = 16
-    #column objects is bsically iehter an index or a collumn objectd
-    def __init__(self, obj:ComparatorFunction, aggregate_fn: Callable[[list[tuple[int, ...]]], Any], check_fn: Callable[[tuple[int, ...]], bool]):
+    def __init__(self, obj:ComparatorFunction, aggregate_fn: Callable[[list[tuple[int, ...]]], Any], check_fn: Callable[[tuple[int, ...]], bool], span=16):
+        self.SPAN = span 
         self.size = obj.size()
         self.zones = [None]*((self.size//self.SPAN) + 1)
         for l in range(0, self.size, self.SPAN):

@@ -2,7 +2,7 @@ from collections import OrderedDict
 from typing import List
 from column_store import ColumnObject, ZoneMap, Indexes
 from writer import Writer
-from search import binary_search, zone_map_search
+from search import Search
 from common_utils import bit_encoded, decode_matric, increase_year_month, year_month_change_fn, \
     price_per_area_change_fn, fixed_change_fn, change_fn
 from external_sorting import ExternalSorting
@@ -60,11 +60,11 @@ class DataBase:
         start_year, start_month, town_values = decode_matric(mat_id)
         (end_year, end_month) = increase_year_month((start_year, start_month), x-1)
         (_,indexer) = next(iter(self.indexes.items()))
-        (l,r) = binary_search(indexer, ((start_year, start_month), (end_year, end_month)), 0, self.size-1)
+        (l,r) = Search.binary_search(indexer, ((start_year, start_month), (end_year, end_month)), 0, self.size-1)
         town_values_encoded = bit_encoded(town_values)
         zones = [v for k,v in self.zone_maps.items()]
         values = [self.indexes[z] if z in self.indexes else self.column_stores[z] for z in self.zone_maps.keys()]
-        rtn = zone_map_search(zones, 
+        rtn = Search.zone_map_search(zones, 
                               [((start_year, start_month), (end_year, end_month)), (0, 4725.0), (y, float("inf")), 
                                town_values_encoded], 
                               values,

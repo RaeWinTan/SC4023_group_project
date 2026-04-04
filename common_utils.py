@@ -25,18 +25,6 @@ def month_fill(val):
 
 
 def decode_matric(matric):
-    DIGIT_TO_TOWN = {
-            '0': 'BEDOK',
-            '1': 'BUKIT PANJANG',
-            '2': 'CLEMENTI',
-            '3': 'CHOA CHU KANG',
-            '4': 'HOUGANG',
-            '5': 'JURONG WEST',
-            '6': 'PASIR RIS',
-            '7': 'TAMPINES',
-            '8': 'WOODLANDS',
-            '9': 'YISHUN'
-    }
     DIGIT_TO_YEAR = {
         '5': 2015, '6': 2016, '7': 2017, '8': 2018, '9': 2019,
         '0': 2020, '1': 2021, '2': 2022, '3': 2023, '4': 2024
