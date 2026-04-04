@@ -16,7 +16,7 @@ from typing import List, Any
 from collections.abc import Callable
 from enum import Enum
 from collections import defaultdict
-import csv
+from abc import ABC, abstractmethod
 
 
 class DataType(Enum):
@@ -25,24 +25,7 @@ class DataType(Enum):
     BIT = 3
 
 
-class Writer:
-    def __init__(self):
-        self.pointer = 0
-        # initialize work book to write as well
-
-    def setCsvWriter(self, file_name):
-        file = open(file_name, "w", newline="")
-        self.writer = csv.writer(file)
-
-    def write(self, column_names, values):
-        if self.pointer == 0:
-            self.writer.writerow(column_names)
-        self.writer.writerow(values)
-
-        self.pointer += 1
-
-
-class ComparatorFunction:
+class ComparatorFunction(ABC):
     def __init__(self):
         self.comparator_callbacks = {
             "inRange": self.inRange,
@@ -50,24 +33,35 @@ class ComparatorFunction:
             "isLesserThanUpperBound": self.isLesserThanUpperBound,
         }
 
-    def size(self):
+    def size(self) -> int:
+        return len(self)
+
+    def get(self, idx: int) -> Any:
+        return self[idx]
+
+    @abstractmethod
+    def __len__(self) -> int:
         pass
 
-    def get(self, idx):
+    @abstractmethod
+    def __getitem__(self, idx: int) -> Any:
         pass
 
-    def inRange(self, idx, rg):
+    @abstractmethod
+    def inRange(self, idx: int, rg):
         pass
 
-    def isLesserThanEqualToUpperBound(self, idx, rg):
+    # @abstractmethod
+    def isLesserThanEqualToUpperBound(self, idx: int, rg):
         pass
 
-    def isLesserThanUpperBound(self, idx, rg):
+    # @abstractmethod
+    def isLesserThanUpperBound(self, idx: int, rg):
         pass
 
 
 class ColumnObject(ComparatorFunction):
-    def __init__(self, column_name, data_type: DataType):
+    def __init__(self, column_name: str, data_type: DataType):
         super().__init__()
         self.column_name = column_name
         self.data_type = data_type
@@ -79,7 +73,7 @@ class ColumnObject(ComparatorFunction):
             return rg[0] <= self.data[idx] <= rg[1]
         return ((1 << self.data[idx]) & rg) > 0
 
-    def size(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def load(self, value):
@@ -94,11 +88,15 @@ class ColumnObject(ComparatorFunction):
             rtn[i] = self.data[p]
         self.data = rtn
 
-    def get(self, idx):
+    def __getitem__(self, idx: int) -> Any:
+        # TODO: Decide whether it is more logical to return uncompressed data by default, only returning compressed data with `get_compressed`
         return self.data[idx]
 
-    def set(self, idx, val):
+    def __setitem__(self, idx: int, val: Any):
         self.data[idx] = val
+
+    def set(self, idx: int, val: Any):
+        self[idx] = val
 
     def make_compress(self, hm):  # word -> integer,
         self.is_compressed = True
@@ -126,10 +124,10 @@ class Indexes(ComparatorFunction):
         self.column_objects = column_objects
         self.aggregate_fn = aggregate_fn
 
-    def size(self):
-        return self.column_objects[0].size()
+    def __len__(self) -> int:
+        return len(self.column_objects[0])
 
-    def get(self, idx):
+    def __getitem__(self, idx: int) -> Any:
         return self.aggregate_fn(*[c.get(idx) for c in self.column_objects])
 
     def inRange(self, idx, rg):

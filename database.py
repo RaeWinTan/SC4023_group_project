@@ -1,16 +1,16 @@
 from collections import OrderedDict
 from typing import List, Dict, Any
-from column_store import Writer, ColumnObject, ZoneMap, Indexes
+from column_store import ColumnObject, DataType, ZoneMap, Indexes
 from search import binary_search, zone_map_search
 from common_utils import bit_encoded
 
 
 class DataBase:
-    def __init__(self, column_names, data_types):
-        self.column_stores: Dict[str, ColumnObject] = dict()
-        for i, name in enumerate(column_names):
-            self.column_stores[name] = ColumnObject(name, data_types[i])
-        self.writer = Writer()
+    def __init__(self, column_names: List[str], data_types: List[DataType]):
+        self.column_stores: Dict[str, ColumnObject] = {
+            name: ColumnObject(name, _type)
+            for name, _type in zip(column_names, data_types)
+        }
         self.size = 0
         self.indexes = OrderedDict()
         self.zone_maps = OrderedDict()

@@ -7,9 +7,7 @@ def MinMax(arr: list[tuple[int, ...]]):
 
 
 def haveOverLap(z, val):
-    if z[1] < val[0] or val[1] < z[0]:
-        return False
-    return True
+    return not (z[1] < val[0] or val[1] < z[0])
 
 
 def inSet(z, val):

@@ -213,7 +213,11 @@ def format(record: Record) -> OutputRecord:
 
 if __name__ == "__main__":
     matric = "U2340246H"
-    # Prepare the output CSV file
+    # 1. Read CSV
+
+    # 2. create column store DB from CSV
+
+    # 3. Prepare a file to stream query results to
     with open(f"ScanResult_{matric}.csv", "w", newline="") as f:
         writer = csv.DictWriter(
             f,
@@ -232,6 +236,7 @@ if __name__ == "__main__":
 
         writer.writeheader()
 
-        # Query the database and write result to CSV
-        for rec in query("U2340246H"):
+        # 3. Query the database
+        for rec in query(matric):
+            # 4. Stream results to csv files
             writer.writerow(format(rec))
