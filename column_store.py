@@ -1,47 +1,15 @@
-
-"""
-indexing 
-sorting 
-binary search
-vectororization 
-shared scan
-early stopping for final aggregate function
-
-
-
-
-
-"""
-from typing import List, Any
+from typing import List, Any, override
 from collections.abc import Callable
 from enum import Enum
 from collections import defaultdict
-import csv 
-
+from external_sorting import ExternalSorting
 class DataType(Enum):
     STRING = 1
     INTEGER = 2
     BIT = 3 
 
 
-class Writer:
-    
-    def __init__(self):
-        self.pointer = 0
-        # initialize work book to write as well
-    def setCsvWriter(self, file_name):
-        file = open(file_name, "w", newline="")
-        self.writer = csv.writer(file)
-    def write(self, column_names, values):
-        if self.pointer ==0:
-            self.writer.writerow(column_names)
-        self.writer.writerow(values)
-
-        self.pointer+=1     
-
-
 class ComparatorFunction:
-    
     def __init__(self):
         self.comparator_callbacks = {
             "inRange": self.inRange, 
@@ -49,17 +17,10 @@ class ComparatorFunction:
             "isLesserThanUpperBound": self.isLesserThanUpperBound
             }
     def size(self):pass
-    def get(self, idx):
-        pass
-
-    def inRange(self, idx, rg):
-        pass 
-    
-    def isLesserThanEqualToUpperBound(self, idx, rg):
-        pass 
-    
-    def isLesserThanUpperBound(self, idx, rg):
-        pass 
+    def get(self, idx):pass
+    def inRange(self, idx, rg): pass 
+    def isLesserThanEqualToUpperBound(self, idx, rg): pass 
+    def isLesserThanUpperBound(self, idx, rg): pass 
 
 class ColumnObject(ComparatorFunction):
 
@@ -69,10 +30,13 @@ class ColumnObject(ComparatorFunction):
         self.data_type = data_type
         self.data = []
         self.is_compressed = False
+    
+    @override 
     def inRange(self, idx, rg):
-        if self.data_type in [DataType.STRING, DataType.INTEGER]:
+        if self.data_type in [DataType.STRING, DataType.INTEGER]: 
             return rg[0]<=self.data[idx]<=rg[1]
         return ((1<<self.data[idx]) & rg) > 0
+    @override
     def size(self):
         return len(self.data)
 
@@ -80,12 +44,11 @@ class ColumnObject(ComparatorFunction):
         if self.data_type==DataType.STRING:
             self.data.append(value)
         else:self.data.append(float(value))
+    
     def reorder(self, permutation):
-        rtn = self.data.copy()
-        for i, p in enumerate(permutation):
-            rtn[i] = self.data[p]
-        self.data = rtn
-
+        self.data = ExternalSorting.reorder(permutation, self.data)
+    
+    @override
     def get(self, idx):
         return self.data[idx]
 
@@ -116,14 +79,19 @@ class Indexes(ComparatorFunction):
         super().__init__()
         self.column_objects = column_objects 
         self.aggregate_fn = aggregate_fn
+    @override 
     def size(self):
         return self.column_objects[0].size()
+    @override 
     def get(self, idx):
         return self.aggregate_fn(*[c.get(idx) for c in self.column_objects])
+    @override 
     def inRange(self, idx, rg):
         return rg[0]<=self.get(idx)<=rg[1]
+    @override 
     def isLesserThanEqualToUpperBound(self, idx, rg):
         return self.get(idx)<=rg[1]
+    @override 
     def isLesserThanUpperBound(self, idx, rg):
         return self.get(idx)< rg[1]
 

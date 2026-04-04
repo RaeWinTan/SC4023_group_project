@@ -1,6 +1,6 @@
 from typing import List
 
-from column_store import ColumnObject, ZoneMap, Indexes, ComparatorFunction
+from column_store import  ZoneMap, Indexes, ComparatorFunction
 
 VECTOR_SIZE = 4 
 
@@ -59,14 +59,8 @@ def vectorization(l,r, values:List[ComparatorFunction], conditions_values, curre
     rtn = -1 
     for idx in range(l,r+1):
         if all([c.comparator_callbacks[conditions_call_backs[i][current_call_back_indexes[i]]](idx, conditions_values[i]) for i,c in enumerate(values)]):
-            #for a singular row all hits 
-            #print("ALL HIT AT", [[cs.get(idx) for cs in v.column_objects] if type(v) == Indexes else v.get(idx) for v in values], idx)
             for i in range(len(values)):
                 conditions_values[i], current_call_back_indexes[i] = change_fn[i](values[i].get(idx), conditions_values[i])
                 rtn = idx 
     return rtn 
-#now zone search 
 
-"""
-
-"""
