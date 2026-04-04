@@ -138,13 +138,39 @@ OutputRecord = TypedDict(
 )
 
 
+def parse_matric(matric: str) -> tuple[int, int, list[int]]:
+    """
+    Given a matric number like U2340246H, extract:
+    - target year   (last digit of number portion)
+    - start month   (second last digit; '0' = October)
+    - towns         (all unique digits in matric)
+    """
+    DIGIT_TO_YEAR = [2020, 2021, 2022, 2023, 2024, 2015, 2016, 2017, 2018, 2019]
+    # DIGIT_TO_TOWN = ["BEDOK", "BUKIT PANJANG", "CLEMENTI", "CHOA CHU KANG", "HOUGANG", "JURONG WEST", "PASIR RIS", "TAMPINES","WOODLANDS", "YISHUN"]
+
+    # Extract only the digit characters
+    assert len(matric) == 9, "Invalid matriculation number, must have length of 9"
+    digits = [int(c) for c in matric[1:-1] if c.isdigit()]
+    assert len(digits) == 7, "Invalid matriculation number, must have 7 digits"
+
+    last_digit = digits[-1]  # target year
+    second_last_digit = digits[-2]  # start month
+
+    target_year = DIGIT_TO_YEAR[last_digit]
+    start_month = 10 if second_last_digit == 0 else second_last_digit
+    towns = list(set(digits))
+
+    return target_year, start_month, towns
+
+
 def query(matric: str) -> Generator[Record, None, None]:
     """
     Queries the database to yield all valid (x,y) pairs and their representative tuples
     """
+    start_year, start_month, town_values = parse_matric(matric)
     for x in range(1, 9):
         for y in range(80, 151):
-            idx = db.query(x, y, matric)
+            idx = db.query(x, y, start_year, start_month, town_values)
 
             if idx == -1:
                 continue
