@@ -2,6 +2,7 @@ from database import DataBase
 from column_store import DataType
 from collections import defaultdict
 from common_utils import MinMax, haveOverLap, inSet, bit_encoded
+from typing import Generator, TypedDict
 
 town_to_digit = defaultdict(
     lambda: 10,
@@ -108,16 +109,49 @@ db.zone_map_columns(
 )
 
 
-db.writer.setCsvWriter("ScanResult_U2340246H_rw.csv")
-for x in range(1, 9):
-    for y in range(80, 151):
-        rtn = db.query(x, y, "U2340246H")
-        if rtn != -1:
-            db.write_data(
-                x,
-                y,
-                rtn,
-                [
+class Record(TypedDict):
+    x: int
+    y: int
+    year: float
+    month: float
+    town: str
+    block: str
+    floor_area_sqm: float
+    flat_model: str
+    lease_commence_date: str
+    resale_price: float
+
+
+OutputRecord = TypedDict(
+    "OutputRecord",
+    {
+        "(x, y)": str,
+        "Year": int,
+        "Month": str,
+        "Town": str,
+        "Block": str,
+        "Floor_Area": int,
+        "Flat_Model": str,
+        "Lease_Commence_Date": str,
+        "Price_Per_Square_Meter": int,
+    },
+)
+
+
+def query(matric: str) -> Generator[Record, None, None]:
+    """
+    Queries the database to yield all valid (x,y) pairs and their representative tuples
+    """
+    for x in range(1, 9):
+        for y in range(80, 151):
+            idx = db.query(x, y, matric)
+
+            if idx == -1:
+                continue
+
+            row = db.get(
+                idx,
+                columns=[
                     "year",
                     "month",
                     "town",
@@ -125,20 +159,53 @@ for x in range(1, 9):
                     "floor_area_sqm",
                     "flat_model",
                     "lease_commence_date",
-                ],
-                ["Price_Per_Square_Meter"],
-                [["resale_price", "floor_area_sqm"]],
-                [lambda a, b: (a * 1.0) / b],
-                [int, month_fill, str, str, normalize_number, str, str, round],
-                [
-                    "(x, y)",
-                    "Year",
-                    "Month",
-                    "Town",
-                    "Block",
-                    "Floor_Area",
-                    "Flat_Model",
-                    "Lease_Commence_Date",
-                    "Price_Per_Square_Meter",
+                    "resale_price",
                 ],
             )
+
+            yield dict(x=x, y=y, **row)  # type: ignore
+
+
+def format(record: Record) -> OutputRecord:
+    """
+    Formats the raw results retrieved from DB for output to CSV
+    """
+    return {
+        "(x, y)": f"({record['x']}, {record['y']})",
+        "Year": int(record["year"]),
+        "Month": f"{int(record['month']):02d}",
+        "Town": record["town"],
+        "Block": record["block"],
+        "Floor_Area": int(record["floor_area_sqm"]),
+        "Flat_Model": record["flat_model"],
+        "Lease_Commence_Date": record["lease_commence_date"],
+        "Price_Per_Square_Meter": round(
+            float(record["resale_price"]) / record["floor_area_sqm"]
+        ),
+    }
+
+
+if __name__ == "__main__":
+    matric = "U2340246H"
+    # Prepare the output CSV file
+    with open(f"ScanResult_{matric}.csv", "w", newline="") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "(x, y)",
+                "Year",
+                "Month",
+                "Town",
+                "Block",
+                "Floor_Area",
+                "Flat_Model",
+                "Lease_Commence_Date",
+                "Price_Per_Square_Meter",
+            ],
+        )
+
+        writer.writeheader()
+
+        # Query the database and write result to CSV
+        for rec in query("U2340246H"):
+            writer.writerow(format(rec))

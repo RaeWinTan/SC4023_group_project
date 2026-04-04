@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List
+from typing import List, Dict, Any
 from column_store import Writer, ColumnObject, ZoneMap, Indexes
 from search import binary_search, zone_map_search
 from common_utils import bit_encoded
@@ -7,7 +7,7 @@ from common_utils import bit_encoded
 
 class DataBase:
     def __init__(self, column_names, data_types):
-        self.column_stores = dict()
+        self.column_stores: Dict[str, ColumnObject] = dict()
         for i, name in enumerate(column_names):
             self.column_stores[name] = ColumnObject(name, data_types[i])
         self.writer = Writer()
@@ -82,6 +82,25 @@ class DataBase:
             output_names,
             [f"({x}, {y})"] + [data_types[i](v) for i, v in enumerate(values)],
         )
+
+    def get(self, index: int, columns: List[str]) -> Dict[str, Any]:
+        """
+        Retrieves the requested attributes of the tuple stored at the given index.
+        This is done by performing tuple reconstruction on the requested columns.
+        Does not support aggregation / arbitrary expressions.
+
+        Parameters
+        ----------
+        index : int
+            The index of the tuple to retrieve
+        columns : list[str]
+            The list of attributes to retrieve
+        """
+
+        return {
+            column: self.column_stores[column].get_original_value(index)
+            for column in columns
+        }
 
     def query(
         self, x, y, mat_id
