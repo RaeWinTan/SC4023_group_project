@@ -16,17 +16,12 @@ town_to_digit = defaultdict(lambda: 10, {
     "WOODLANDS": 8,
     "YISHUN": 9
 })
-month_map = {
-    "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4,
-    "May": 5, "Jun": 6, "Jul": 7, "Aug": 8,
-    "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12
-}
 column_names = ["year",           "month",          "town",         "block",        "street_name",
                 "flat_type",    "flat_model",   "storey_range", "floor_area_sqm",    "lease_commence_date", "resale_price"]
 column_types = [DataType.INTEGER, DataType.INTEGER, DataType.STRING, DataType.STRING, DataType.STRING,
                 DataType.STRING, DataType.STRING, DataType.STRING, DataType.INTEGER, DataType.STRING, DataType.INTEGER]
 db = DataBase(column_names, column_types)
-for row_dict in read_processed_rows("ResalePricesSingapore.csv", month_map):
+for row_dict in read_processed_rows("ResalePricesSingapore.csv"):
     db.load_data(row_dict)
 db.compress_column("town", town_to_digit)
 db.index_columns([("year", "month"), ("resale_price", "floor_area_sqm")], [

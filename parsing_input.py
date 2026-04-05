@@ -1,6 +1,10 @@
 import csv
-
-def read_processed_rows(filepath, month_map):
+month_map = {
+    "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4,
+    "May": 5, "Jun": 6, "Jul": 7, "Aug": 8,
+    "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12
+}
+def read_processed_rows(filepath):
     with open(filepath, newline="") as f:
         reader = csv.reader(f)
         headers = next(reader)
