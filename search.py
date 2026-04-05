@@ -42,10 +42,10 @@ class Search:
         idx = l 
         current_call_back_indexes = [0]*len(values)
         while idx<r+1:
-            if not all([zm.checkInside(idx, conditions[i]) for i,zm in enumerate(zone_maps)]):
+            #lazy evaluation of conditions to prevent unneccessary zonemap reads 
+            if any((not zm.checkInside(idx, conditions[i])) for i,zm in enumerate(zone_maps) ):
                 idx = zone_maps[0].nextIdx(idx)
             else:
-                #print("ZONE HIT")
                 end = min(zone_maps[0].nextIdx(idx), r+1)
                 for j in range(idx, end, Search.VECTOR_SIZE):
                     tmp = Search.vectorization(j, min(j+Search.VECTOR_SIZE-1, end-1), values, conditions, current_call_back_indexes, condition_call_backs, change_fns)
@@ -56,7 +56,8 @@ class Search:
     def vectorization(l,r, values:List[ComparatorFunction], conditions_values, current_call_back_indexes, conditions_call_backs, change_fn):#l,r is somewhat define by the zone map
         rtn = -1 
         for idx in range(l,r+1):
-            if all([c.comparator_callbacks[conditions_call_backs[i][current_call_back_indexes[i]]](idx, conditions_values[i]) for i,c in enumerate(values)]):
+            #lazy evaluation of condititions to prevent unneccessary column store/indexes reads
+            if all(c.comparator_callbacks[conditions_call_backs[i][current_call_back_indexes[i]]](idx, conditions_values[i]) for i,c in enumerate(values)):
                 for i in range(len(values)):
                     conditions_values[i], current_call_back_indexes[i] = change_fn[i](values[i].get(idx), conditions_values[i])
                     rtn = idx 

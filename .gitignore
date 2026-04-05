@@ -18,3 +18,4 @@ __pycache__/
 
 # But keep test.csv
 !ResalePricesSingapore.csv
+.DS_Store
