@@ -28,17 +28,20 @@ db.index_columns([("year", "month"), ("resale_price", "floor_area_sqm")], [
                  lambda a, b: (a, b), lambda a, b: ((a*1.0)/b)])
 db.zone_map_columns([("year", "month"), ("resale_price", "floor_area_sqm"), ("floor_area_sqm"), ("town")], [
                     MinMax, MinMax, MinMax, bit_encoded], [haveOverLap, haveOverLap, haveOverLap, inSet])
-MATID = "U2240731L"
-db.writer.setCsvWriter(f"ScanResult_{MATID}_generated.csv")
-for x in range(1, 9):
-    for y in range(80, 151):
-        rtn = db.query(x, y, MATID)
-        if rtn != -1:
-            db.write_data(x, y, rtn,
-                          ["year", "month", "town", "block", "floor_area_sqm",
-                           "flat_model", "lease_commence_date"],
-                          [["resale_price", "floor_area_sqm"]], [
-                              lambda a, b: (a*1.0)/b],
-                          [int, month_fill, str, str,
-                           normalize_number, str, str, round],
-                          ["(x, y)", "Year","Month","Town", "Block","Floor_Area", "Flat_Model", "Lease_Commence_Date"	,"Price_Per_Square_Meter"])
+
+matids = ["U2340246H", "U2240731L"]
+for MATID in matids:
+    db.writer.setCsvWriter(f"ScanResult_{MATID}_generated.csv")
+    for x in range(1, 9):
+        for y in range(80, 151):
+            rtn = db.query(x, y, MATID)
+            if rtn != -1:
+                db.write_data(x, y, rtn,
+                            ["year", "month", "town", "block", "floor_area_sqm",
+                            "flat_model", "lease_commence_date"],
+                            [["resale_price", "floor_area_sqm"]], [
+                                lambda a, b: (a*1.0)/b],
+                            [int, month_fill, str, str,
+                            normalize_number, str, str, round],
+                            ["(x, y)", "Year","Month","Town", "Block","Floor_Area", "Flat_Model", "Lease_Commence_Date"	,"Price_Per_Square_Meter"])
+    db.writer.close()
