@@ -3,6 +3,7 @@ from collections.abc import Callable
 from enum import Enum
 from collections import defaultdict
 from external_sorting import ExternalSorting
+from indexdatastructure import IndexDataStucture
 class DataType(Enum):
     STRING = 1
     INTEGER = 2
@@ -23,14 +24,16 @@ class ComparatorFunction:
     def isLesserThanUpperBound(self, idx, rg): pass 
 
 class ColumnObject(ComparatorFunction):
-
+    index_datastructure:IndexDataStucture = None 
     def __init__(self, column_name, data_type: DataType):
         super().__init__()
         self.column_name = column_name
         self.data_type = data_type
         self.data = []
         self.is_compressed = False
-    
+    @classmethod
+    def set_index_datastructure(cls, val:IndexDataStucture):
+        cls.index_datastructure = val 
     @override 
     def inRange(self, idx, rg):
         if self.data_type in [DataType.STRING, DataType.INTEGER]: 
@@ -54,14 +57,13 @@ class ColumnObject(ComparatorFunction):
 
     def set(self, idx, val):
         self.data[idx] = val
-
-    def make_compress(self, hm):  # word -> integer,
+    #
+    #compressing to an integer value which is then used for encoding through bit manipulation
+    def make_compress(self, hm):#10 main towns 10 (0,9)
         self.is_compressed = True
         self.data_type = DataType.BIT
         self.hm = hm.copy()
-        # the non intresting guys are just the last option
         self.ihm = defaultdict(lambda: len(self.hm)-1)
-        # this will still work because i will never write a guy that is not in the hashmap list in our case
         for k, v in hm.items():
             self.ihm[v] = k
         for i, e in enumerate(self.data):
@@ -74,8 +76,6 @@ class ColumnObject(ComparatorFunction):
 
 class Indexes(ComparatorFunction):
     def __init__(self, column_objects:List[ColumnObject], aggregate_fn):
-        #the feature we need is baisclaly check value kinda thing
-        #in this case check is mallsr
         super().__init__()
         self.column_objects = column_objects 
         self.aggregate_fn = aggregate_fn
@@ -96,10 +96,10 @@ class Indexes(ComparatorFunction):
         return self.get(idx)< rg[1]
 
 class ZoneMap:
-    def __init__(self, obj:ComparatorFunction, aggregate_fn: Callable[[list[tuple[int, ...]]], Any], check_fn: Callable[[tuple[int, ...]], bool], span=16):
-        self.SPAN = span 
+    SPAN = 16
+    def __init__(self, obj:ComparatorFunction, aggregate_fn: Callable[[list[tuple[int, ...]]], Any], check_fn: Callable[[tuple[int, ...]], bool]):
         self.size = obj.size()
-        self.zones = [None]*((self.size//self.SPAN) + 1)
+        self.zones = [None]*((self.size//self.SPAN) + (0 if ((self.size%self.SPAN)==0) else 1))
         for l in range(0, self.size, self.SPAN):
             r = min(l+self.SPAN, self.size)
             self.zones[l//self.SPAN] = aggregate_fn([obj.get(idx) for idx in range(l, r)])
@@ -107,6 +107,14 @@ class ZoneMap:
     def getZone(self, idx):
         return self.zones[idx//self.SPAN]
     def checkInside(self, idx, value):
-        return self.check_fn(self.zones[idx//self.SPAN], value)
-    def nextIdx(self, idx):#where detect a mis continue next indexi like that
+        return self.check_fn(self.getZone(idx), value), self.getZone(idx)
+    def nextIdx(self, idx):
         return min(((idx+self.SPAN)//self.SPAN)*self.SPAN, self.size)
+    def getZoneIndex(self, idx):
+        return idx//self.SPAN
+    def getOriginalIndex(self, idx):
+        return idx*self.SPAN
+    def getZoneSize(self): 
+        return len(self.zones)
+    def get(self, idx):
+        return self.zones[idx]

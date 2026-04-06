@@ -2,7 +2,7 @@
 class ExternalSorting:
 
     @staticmethod
-    def indexing_permutation(size, indexes, column_stores, aggregate_fns):
+    def index_sorting(size, indexes, column_stores, aggregate_fns):
         arr = [] 
         for i in range(size):
             row_val = [] 
@@ -15,7 +15,11 @@ class ExternalSorting:
             arr.append((tuple(row_val), i))
         arr.sort()
         permutation = [i for _,i in arr]
-        return permutation
+        #standardizing order of data across all column stores 
+        for _, cs in column_stores.items():
+            cs.data = ExternalSorting.reorder(permutation, cs.data)
+        return 
+
     @staticmethod
     def reorder(permutation, data):
         rtn = [None]*len(data)

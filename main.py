@@ -23,7 +23,7 @@ column_types = [DataType.INTEGER, DataType.INTEGER, DataType.STRING, DataType.ST
 db = DataBase(column_names, column_types)
 for row_dict in read_processed_rows("ResalePricesSingapore.csv"):
     db.load_data(row_dict)
-db.compress_column("town", town_to_digit)# bit encoded like 1000, 0100, 0001,...... number of form 1<<sft
+db.compress_column("town", town_to_digit) 
 db.index_columns([("year", "month"), ("resale_price", "floor_area_sqm")], [
                  lambda a, b: (a, b), lambda a, b: ((a*1.0)/b)])
 """
@@ -43,12 +43,12 @@ sorting precendence
 #sorting precendence-> (2020, 1)
 db.zone_map_columns([("year", "month"), ("resale_price", "floor_area_sqm"), ("floor_area_sqm"), ("town")], [
                     MinMax, MinMax, MinMax, bit_encoded], [haveOverLap, haveOverLap, haveOverLap, inSet])
-
-matids = ["U2340246H", "U2240731L"]
+#0 15, hougang, bp, c : 10110
+matids = ["U2340246H"]
 for MATID in matids:
     db.writer.setCsvWriter(f"ScanResult_{MATID}_generated.csv")
-    for x in range(1, 9):
-        for y in range(80, 151):
+    for x in range(7, 8):
+        for y in range(124, 133):
             rtn = db.query(x, y, MATID)
             if rtn != -1:
                 db.write_data(x, y, rtn,
