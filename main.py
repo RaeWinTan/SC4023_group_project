@@ -23,9 +23,24 @@ column_types = [DataType.INTEGER, DataType.INTEGER, DataType.STRING, DataType.ST
 db = DataBase(column_names, column_types)
 for row_dict in read_processed_rows("ResalePricesSingapore.csv"):
     db.load_data(row_dict)
-db.compress_column("town", town_to_digit)
+db.compress_column("town", town_to_digit)# bit encoded like 1000, 0100, 0001,...... number of form 1<<sft
 db.index_columns([("year", "month"), ("resale_price", "floor_area_sqm")], [
                  lambda a, b: (a, b), lambda a, b: ((a*1.0)/b)])
+"""
+INDEXING DATASTUCTYURE: [town-> start psotiion ]
+
+town (10) DATASTRUCURE : value -> very first position
+[]10 key-> value parit 
+120 * 10
+
+(town, yearmont, price/sqf)
+sorting precendence
+1. ((2020, 1), (100)) -> from db 
+2. (2020, 1), (110)
+3. (2020, 2), (90)
+
+"""
+#sorting precendence-> (2020, 1)
 db.zone_map_columns([("year", "month"), ("resale_price", "floor_area_sqm"), ("floor_area_sqm"), ("town")], [
                     MinMax, MinMax, MinMax, bit_encoded], [haveOverLap, haveOverLap, haveOverLap, inSet])
 
