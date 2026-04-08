@@ -68,12 +68,17 @@ class Indexes:
      
     def get(self, idx):
         return self.agg_fn(*[c_obj.get(idx) for c_obj in self.column_objects])
-     
+    
+    def get_with_original_value(self, idx):
+        rtn = [c_obj.get(idx) for c_obj in self.column_objects]
+        return self.agg_fn(*rtn), rtn 
     def isLesserThanEqualToUpperBound(self, idx, rg):
-        return self.get(idx)<=rg[1]
+        val,ori = self.get_with_original_value(idx)
+        return val<=rg[1], ori
      
     def isLesserThanUpperBound(self, idx, rg):
-        return self.get(idx)< rg[1]
+        val,ori = self.get_with_original_value(idx)
+        return val< rg[1], ori
 
 class ZoneMap:
     SPAN = 16

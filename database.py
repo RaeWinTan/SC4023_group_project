@@ -68,6 +68,7 @@ class DataBase:
         rtn = -1 
         price_per_area_condition = [0, 4725] 
         price_per_area_handler = ConditionHandler(price_per_area_condition, ["isLesserThanEqualToUpperBound", "isLesserThanUpperBound"], reduce_upper_bound)
+        time,area=-1, -1
         for l,r,time_ds in town_index_ds:
             if (l,r)!=(-1,-1):
                 for t in range(start_time, end_time+1):
@@ -75,6 +76,9 @@ class DataBase:
                     if (lt,rt)!=(-1,-1):
                         floor_area_start_idx = Search.bisect_left(self.indexes["floor_area_sqm"], y, lt, rt)
                         if floor_area_start_idx<=rt:
-                            tmp = Search.zone_map_search(self.zone_maps[("resale_price", "floor_area_sqm")], floor_area_start_idx, rt, price_per_area_handler)
-                            if tmp!=-1: rtn = tmp 
-        return rtn 
+                            tmp, values = Search.zone_map_search(self.zone_maps[("resale_price", "floor_area_sqm")], floor_area_start_idx, rt, price_per_area_handler)
+                            if tmp!=-1: 
+                                time = t 
+                                area = values[1] 
+                                rtn = tmp 
+        return rtn, time, area, start_time

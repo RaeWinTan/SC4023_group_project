@@ -2,18 +2,9 @@ import csv
 
 def csv_equal(file1, file2):
     with open(file1, newline='') as f1, open(file2, newline='') as f2:
-        reader1 = csv.reader(f1)
-        reader2 = csv.reader(f2)
-
-        for row1, row2 in zip(reader1, reader2):
-            if row1 != row2:
-                return False
-
-        # Check if lengths differ
-        if any(reader1) or any(reader2):
-            return False
-
-    return True
+        reader1 = list(csv.reader(f1))
+        reader2 = list(csv.reader(f2))
+    return reader1 == reader2
 
 
 if __name__ == "__main__":
