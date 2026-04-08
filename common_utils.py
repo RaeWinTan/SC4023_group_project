@@ -5,16 +5,6 @@ def MinMax(arr: list[tuple[int, ...]]):
         mn = min(arr[i], mn)
         mx = max(arr[i], mx)
     return (mn, mx)
-def haveOverLap(z, val):
-    if z[1]<val[0] or val[1]< z[0]: return False
-    return True 
-def inSet(z, val):
-    return (z & val)!=0 
-def bit_encoded(arr):
-    acc = 0 
-    for (a) in arr:
-        acc|=(1<<a)
-    return acc 
 
 #CALLBACKS USED FOR DATA PRESENTATION
 def normalize_number(val):
@@ -38,76 +28,38 @@ def decode_matric(matric):
     town_values = [int(d) for d in digits] 
     return target_year, start_month, list(set(town_values))
 
+def convert_year_month_to_month(year, month):
+    return year*12 + month -1 
+
+def convert_year_month_to_time(year, month):
+    return convert_year_month_to_month(year, month) - convert_year_month_to_month(2015, 1)
+
+def convert_time_to_month_year(time):
+    time+=convert_year_month_to_month(2015, 1)
+    return (int(time//12) , month_fill(int((time%12) + 1)))
+
 def getQueryParameters(x,mat_id):
     start_year, start_month, town_values = decode_matric(mat_id)
-    (end_year, end_month) = increase_year_month((start_year, start_month), x-1)
-    town_values_encoded = bit_encoded(town_values) 
-    return start_year, start_month, end_year, end_month, town_values_encoded
+    start_time = convert_year_month_to_time(start_year, start_month)
+    end_time = min(start_time + x-1, convert_year_month_to_time(2025, 12))
+    return start_time, end_time, town_values
 
-#LOGIC TO INCREASE YEAR MONTH
-def increase_year_month(t,mths):
-    year,month = t
-    year-=1 
-    month-=1 
-    return (1+year+(month+mths)//12, 1 + (month+mths)%12)
+#condition to be fed as on_hit_row_fn 
+def reduce_upper_bound(condition, val):
+    condition[1] = val 
+    return 
 
-#CALLBACKS MOSTLY USED FOR VECTORIZATION CONDITIONAL BOUNDS USED IN CONJECTION WITH change_fn
-def year_month_change_fn(val, rg):
-    new_start = increase_year_month(val, 1)
-    return (new_start, rg[1])
-def price_per_area_change_fn(val, rg):
-    return (rg[0], val)
-def fixed_change_fn(val, rg):
-    return rg
-
-#HANDLER CONTAINING LOGIC TO FACILITATE CHANGE CONDITIONS IN VECTORIZE SEARCH
+#HANDLER CONTAINING LOGIC TO FACILITATE CHANGE CONDITIONS 
 class ConditionHandler:
-    def __init__(self, on_row_hit_condition_change_fn, on_zone_condition_change_fn, call_back_names):
-        self.on_row_hit_condition_change_fn = on_row_hit_condition_change_fn 
-        self.on_zone_condition_change_fn = on_zone_condition_change_fn
-        self.call_back_names = call_back_names 
-        self.call_back_fun_idx = 0 
-    def on_row_hit(self, val, rg):
-        rtn = self.on_row_hit_condition_change_fn(val, rg)
+    #need to updateh condition 
+    def __init__(self, condition, call_backs, on_hit_row_fn):
+        self.condition = condition 
+        self.call_back_fun_idx = 0
+        self.call_back_names = call_backs
+        self.on_hit_row_fn = on_hit_row_fn
+    def __call__(self, val):
         self.call_back_fun_idx = min(len(self.call_back_names)-1, self.call_back_fun_idx+1)
-        return rtn 
-    def on_zone_hit(self, val, rg):#update 
-        return rtn 
+        self.on_hit_row_fn(self.condition, val)
+        
     def get_call_back_name(self):
         return self.call_back_names[self.call_back_fun_idx]
-#can put logic in condition handler?
-
-class EarlyStopping:
-    def __init__(self, conditions, check_condition_fns):
-        self.conditions = conditions 
-        self.check_condition_fns = check_condition_fns 
-    def can_stop(self):
-        return any(self.check_condition_fns[i](self.conditions[i]) for i in range(len(self.conditions)))
-
-
-#should have a codntion handler here as well
-#condtion handle for some condition
-#handle the coindition where 
-#while scanning the zones
-#check Zone Scnning handler: while scanning hte zone 
-    #update lower bound of year,monh,
-    #update upper bound of price/sqm
-
-
-"""
-JUMP CONDITIONS:
-    if there is a hit:
-        jump to next different year, month
-    elif zone price/sqm lower bound [above, equal or above] condition upper bound:
-        jump to next different year, month
-    #CAN USE DP O(1) can 
-
-STOPPING CONDITIONS:
-    #zone year month lower bound above condition upper bound
-
-simple early stopong only one element for now
-one zone check
-in the zonemap search
-    if zone_maps[0].getZone(idx)
-    the lower bound is 
-"""

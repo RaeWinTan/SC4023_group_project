@@ -1,29 +1,16 @@
-from typing import List, Any, override
+from typing import List, override
 from collections.abc import Callable
 from enum import Enum
 from collections import defaultdict
-from external_sorting import ExternalSorting
+
 from indexdatastructure import IndexDataStucture
 class DataType(Enum):
     STRING = 1
     INTEGER = 2
-    BIT = 3 
 
 
-class ComparatorFunction:
-    def __init__(self):
-        self.comparator_callbacks = {
-            "inRange": self.inRange, 
-            "isLesserThanEqualToUpperBound": self.isLesserThanEqualToUpperBound,
-            "isLesserThanUpperBound": self.isLesserThanUpperBound
-            }
-    def size(self):pass
-    def get(self, idx):pass
-    def inRange(self, idx, rg): pass 
-    def isLesserThanEqualToUpperBound(self, idx, rg): pass 
-    def isLesserThanUpperBound(self, idx, rg): pass 
-
-class ColumnObject(ComparatorFunction):
+class ColumnObject:
+    COLUMN_READ = 0 
     index_datastructure:IndexDataStucture = None 
     def __init__(self, column_name, data_type: DataType):
         super().__init__()
@@ -31,15 +18,15 @@ class ColumnObject(ComparatorFunction):
         self.data_type = data_type
         self.data = []
         self.is_compressed = False
+
     @classmethod
     def set_index_datastructure(cls, val:IndexDataStucture):
         cls.index_datastructure = val 
-    @override 
-    def inRange(self, idx, rg):
-        if self.data_type in [DataType.STRING, DataType.INTEGER]: 
-            return rg[0]<=self.data[idx]<=rg[1]
-        return ((1<<self.data[idx]) & rg) > 0
-    @override
+
+    @classmethod 
+    def getColumnRead(cls):
+        return cls.COLUMN_READ
+
     def size(self):
         return len(self.data)
 
@@ -48,20 +35,13 @@ class ColumnObject(ComparatorFunction):
             self.data.append(value)
         else:self.data.append(float(value))
     
-    def reorder(self, permutation):
-        self.data = ExternalSorting.reorder(permutation, self.data)
-    
-    @override
     def get(self, idx):
+        ColumnObject.COLUMN_READ+=1 
         return self.data[idx]
-
-    def set(self, idx, val):
-        self.data[idx] = val
-    #
-    #compressing to an integer value which is then used for encoding through bit manipulation
-    def make_compress(self, hm):#10 main towns 10 (0,9)
+    
+    def make_compress(self, hm):
         self.is_compressed = True
-        self.data_type = DataType.BIT
+        self.data_type = DataType.INTEGER
         self.hm = hm.copy()
         self.ihm = defaultdict(lambda: len(self.hm)-1)
         for k, v in hm.items():
@@ -74,47 +54,46 @@ class ColumnObject(ComparatorFunction):
             return self.ihm[self.data[idx]]
         return self.data[idx]
 
-class Indexes(ComparatorFunction):
-    def __init__(self, column_objects:List[ColumnObject], aggregate_fn):
-        super().__init__()
+class Indexes:
+    def __init__(self, column_objects:List[ColumnObject], agg_fn):
+        self.comparator_callbacks = {
+            "isLesserThanEqualToUpperBound": self.isLesserThanEqualToUpperBound,
+            "isLesserThanUpperBound": self.isLesserThanUpperBound
+        }
         self.column_objects = column_objects 
-        self.aggregate_fn = aggregate_fn
-    @override 
+        self.agg_fn = agg_fn 
+     
     def size(self):
         return self.column_objects[0].size()
-    @override 
+     
     def get(self, idx):
-        return self.aggregate_fn(*[c.get(idx) for c in self.column_objects])
-    @override 
-    def inRange(self, idx, rg):
-        return rg[0]<=self.get(idx)<=rg[1]
-    @override 
+        return self.agg_fn(*[c_obj.get(idx) for c_obj in self.column_objects])
+     
     def isLesserThanEqualToUpperBound(self, idx, rg):
         return self.get(idx)<=rg[1]
-    @override 
+     
     def isLesserThanUpperBound(self, idx, rg):
         return self.get(idx)< rg[1]
 
 class ZoneMap:
     SPAN = 16
-    def __init__(self, obj:ComparatorFunction, aggregate_fn: Callable[[list[tuple[int, ...]]], Any], check_fn: Callable[[tuple[int, ...]], bool]):
+    ZONE_READ = 0 
+    def __init__(self, obj:Indexes, aggregate_fn: Callable[[list[tuple[int, ...]]], any]):
         self.size = obj.size()
         self.zones = [None]*((self.size//self.SPAN) + (0 if ((self.size%self.SPAN)==0) else 1))
         for l in range(0, self.size, self.SPAN):
             r = min(l+self.SPAN, self.size)
             self.zones[l//self.SPAN] = aggregate_fn([obj.get(idx) for idx in range(l, r)])
-        self.check_fn = check_fn 
+        self.indexes = obj
+    @classmethod 
+    def getZoneRead(cls):
+        return cls.ZONE_READ 
     def getZone(self, idx):
+        ZoneMap.ZONE_READ+=1 
         return self.zones[idx//self.SPAN]
     def checkInside(self, idx, value):
-        return self.check_fn(self.getZone(idx), value), self.getZone(idx)
+        zl,zr = self.getZone(idx)
+        return  not ( zr < value[0] or value[1] < zl)
     def nextIdx(self, idx):
         return min(((idx+self.SPAN)//self.SPAN)*self.SPAN, self.size)
-    def getZoneIndex(self, idx):
-        return idx//self.SPAN
-    def getOriginalIndex(self, idx):
-        return idx*self.SPAN
-    def getZoneSize(self): 
-        return len(self.zones)
-    def get(self, idx):
-        return self.zones[idx]
+    
