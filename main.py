@@ -48,9 +48,12 @@ for MATID in matids:
                         for ty in range(y, min(floor(area)+1, 151)):
                             dp[ty-80][tx] = rtn 
                 else:
-                    dp[y-80][x-1] = -1 
+                    for tx in range(0, x):
+                        for ty in range(y, 151):
+                            dp[ty-80][tx] = -1 
     for x in range(1, 9):
         for y in range(80, 151):
+            if dp[y-80][x-1] == float("inf"): print(x,y)
             rtn = dp[y-80][x-1]
             if rtn != -1:
                 db.write_data(x, y, rtn,
@@ -101,5 +104,7 @@ say time 13
 
 shading squre problem
 
-
+if no solution?
+    any higher in y will also have no solution 
+    any lower in x will also have no soltion 
 """
