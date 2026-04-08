@@ -25,7 +25,7 @@ for row_dict in read_processed_rows("ResalePricesSingapore.csv"): db.load_data(r
 db.compress_column("town", town_to_digit) 
 db.index_columns([["town"], ["time"], ["floor_area_sqm"], ["resale_price", "floor_area_sqm"]], [lambda a: a]*3 + [lambda a,b: (a*1.0)/b],[11, 132])
 db.zone_map_columns(("resale_price", "floor_area_sqm"), MinMax)
-matids = ["U2340246H", "U2240731L"]
+matids = ["U2221633B"]
 query_count = (9-1)*(151 - 80)*len(matids)
 total_zone_read = 0 
 total_column_read = 0
@@ -43,9 +43,12 @@ for MATID in matids:
                 column_read = ColumnObject.getColumnRead() - before_column_read
                 total_zone_read+=zone_read
                 total_column_read+=column_read
-                for tx in range(time-start_time,x):
-                    for ty in range(y, min(floor(area)+1, 151)):
-                        dp[ty-80][tx] = rtn 
+                if rtn!=-1:
+                    for tx in range(time-start_time,x):
+                        for ty in range(y, min(floor(area)+1, 151)):
+                            dp[ty-80][tx] = rtn 
+                else:
+                    dp[y-80][x-1] = -1 
     for x in range(1, 9):
         for y in range(80, 151):
             rtn = dp[y-80][x-1]
