@@ -1,4 +1,5 @@
 import csv
+from common_utils import convert_year_month_to_time
 month_map = {
     "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4,
     "May": 5, "Jun": 6, "Jul": 7, "Aug": 8,
@@ -14,9 +15,8 @@ def read_processed_rows(filepath):
 
             month_year = row_dict["month"]
             del row_dict["month"]
-
             mon_str, yy = month_year.split("-")
-            row_dict["month"] = month_map[mon_str]
-            row_dict["year"] = "20" + yy
-
+            month = month_map[mon_str]
+            year = int("20" + yy)
+            row_dict["time"] = convert_year_month_to_time(year, month)
             yield row_dict  
