@@ -6,10 +6,17 @@ def csv_equal(file1, file2):
         reader2 = list(csv.reader(f2))
     return reader1 == reader2
 
-
+def get_generated_file(name):
+    return name.replace(".csv", "_generated.csv")
+import os 
 if __name__ == "__main__":
-    frr = [["ScanResult_U2340246H.csv", "ScanResult_U2340246H_generated.csv"], 
-           ["ScanResult_U2240731L.csv", "ScanResult_U2240731L_generated.csv"]] 
-    for a in frr:
-        assert csv_equal(*a), "!!!!!!!!! GOT ERRORR !!!!!!!"
-    print("ALL GOOD")
+    for file in os.listdir("."):
+        # pick only original files (not generated ones)
+        if file.startswith("ScanResult_U") and file.endswith(".csv") and "_generated" not in file:
+            generated = get_generated_file(file)
+            # check if generated file exists
+            if not os.path.exists(generated):
+                raise FileNotFoundError(f"Missing generated file for {file}")
+            assert csv_equal(file, generated), f"ERROR comparing {file}"
+
+    print("ALL GOOD ✅")
