@@ -1,17 +1,20 @@
+from typing import Any
 
 from common_utils import ConditionHandler
 class Search:
-    VECTOR_SIZE = 4
+    VECTOR_SIZE: int = 4
     @classmethod
-    def set_vector_size(cls, sz):
+    def set_vector_size(cls, sz: int):
         cls.VECTOR_SIZE = sz 
     @staticmethod
-    def bisect_left(indexes, x, l, r):
-        #return index such that this  is smallest index that satisfies indexes.get(index)>= x 
+    def bisect_left(indexes: Any, x: Any, l: int, r: int) -> int:
+        """
+        return index such that this  is smallest index that satisfies indexes.get(index)>= x 
+        """
         rtn = r+1
         while l<=r:
             mid = l + (r-l)//2 
-            if indexes.get(mid)>=x:
+            if indexes[mid]>=x:
                 rtn = mid 
                 r = mid-1 
             else:
@@ -19,12 +22,14 @@ class Search:
         return rtn 
     
     @staticmethod
-    def bisect_right(indexes, x, l, r):
-        #return index such that this is the smallest index that satisfies indexes.get(index)>x
+    def bisect_right(indexes: Any, x: Any, l: int, r: int):
+        """
+        return index such that this is the smallest index that satisfies indexes.get(index)>x
+        """
         rtn = r+1 
         while l<=r:
             mid = l + (r-l)//2 
-            if indexes.get(mid)>x:
+            if indexes[mid]>x:
                 rtn = mid 
                 r = mid-1 
             else:
@@ -32,7 +37,7 @@ class Search:
         return rtn 
     
     @staticmethod
-    def zone_map_search(zone_maps,l,r, price_per_area_handler: ConditionHandler):
+    def zone_map_search(zone_maps: Any, l: int, r: int, price_per_area_handler: ConditionHandler):
         indexes = zone_maps.indexes 
         idx = l 
         rtn = -1 
@@ -45,6 +50,6 @@ class Search:
                     if condition_hit:
                         rtn = i
                         rtn_value = values 
-                        price_per_area_handler(indexes.get(i))
+                        price_per_area_handler(indexes[i])
             idx = nxtIdx
         return rtn, rtn_value

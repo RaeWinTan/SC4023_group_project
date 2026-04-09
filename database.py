@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from typing import List
-from column_store import ColumnObject, ZoneMap, Indexes
+from column_store import ColumnObject, DataType, ZoneMap, Indexes
 from writer import Writer
 from search import Search
 from common_utils import ConditionHandler, TimeInt, TownInt, reduce_upper_bound
@@ -9,14 +9,14 @@ from indexdatastructure import IndexDataStucture
 
 class DataBase:
     
-    def __init__(self, column_names, data_types):
-        self.column_stores = dict()
+    def __init__(self, column_names: str, data_types: list[DataType]):
+        self.column_stores: dict[str, ColumnObject] = dict()
         for i, name in enumerate(column_names):
             self.column_stores[name] = ColumnObject(name, data_types[i])
         self.writer = Writer()
         self.size = 0 
-        self.indexes = OrderedDict()
-        self.zone_maps = OrderedDict()
+        self.indexes: dict[tuple[str, ...] | str, Indexes] = OrderedDict()
+        self.zone_maps: dict[tuple[str, ...], ZoneMap] = OrderedDict()
 
     def load_data(self, data):
         assert set(data.keys())==set(self.column_stores.keys()), "All columns must match columns in database"
