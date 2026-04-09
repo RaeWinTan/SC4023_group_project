@@ -1,7 +1,7 @@
 from database import DataBase
 from column_store import DataType, ZoneMap, ColumnObject
 from collections import defaultdict
-from common_utils import MinMax, normalize_number, convert_time_to_month_year
+from common_utils import MinMax, TimeInt, decode_matric, get_end_time, normalize_number, convert_time_to_month_year
 from parsing_input import read_processed_rows
 from math import floor 
 town_to_digit = defaultdict(lambda: 10, {
@@ -51,15 +51,17 @@ query_count = (9-1)*(151 - 80)*len(matids)
 total_zone_read = 0 
 total_column_read = 0
 for MATID in matids:
+    start_time, towns = decode_matric(MATID)
     db.writer.setCsvWriter(f"ScanResult_{MATID}_generated.csv") 
     dp = [[float("inf")]*8 for _ in range(151-80)]
     for x in range(8,0,-1):#((8,0, -1))
+        end_time = get_end_time(x=x, start_time=start_time)
         for y in range(80, 151):
             before_zone_read = ZoneMap.getZoneRead()
             before_column_read = ColumnObject.getColumnRead()
             rtn = dp[y-80][x-1]
             if rtn==float("inf"):#never seen before case 
-                rtn,time,area, start_time = db.query(x, y, MATID)
+                rtn,time,area = db.query(x, y, start_time=start_time, end_time=end_time, town_values=towns)
                 zone_read = ZoneMap.getZoneRead() - before_zone_read
                 column_read = ColumnObject.getColumnRead() - before_column_read
                 total_zone_read+=zone_read

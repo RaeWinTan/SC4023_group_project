@@ -1,3 +1,17 @@
+import re
+
+type TimeInt = int
+type TownInt = int
+"""
+Town, in integer form
+i.e. Bedok is represented as 0, Yishun is 9
+"""
+valid_matric = re.compile(r"^[A-Z]\d{7}[A-Z]", re.IGNORECASE)
+"""
+Regular expression to check if a string is a valid matriculation number, which we
+assume to be one alpha seven digits one alpha
+"""
+
 #CALLBACKS MOSTLY USED FOR ZONEMAPS ENCODING
 def MinMax(arr: list[tuple[int, ...]]):
     mn,mx = arr[0],arr[0]
@@ -15,34 +29,30 @@ def month_fill(val):
     return f"{val:02d}"
 
 #METHODS USED FOR PARSING QUERIES
-def decode_matric(matric):
-    DIGIT_TO_YEAR = {
-        '5': 2015, '6': 2016, '7': 2017, '8': 2018, '9': 2019,
-        '0': 2020, '1': 2021, '2': 2022, '3': 2023, '4': 2024
-    }
-    digits = [c for c in matric if c.isdigit()]
-    last_digit        = digits[-1]   # target year
+def decode_matric(matric: str) -> tuple[TimeInt, list[TownInt]]:
+    assert valid_matric.match(matric), "Invalid matriculation number"
+    DIGIT_TO_YEAR  = [2020, 2021, 2022, 2023, 2024, 2015, 2016, 2017, 2018, 2019]
+    digits = [int(c) for c in matric if c.isdigit()]
+    last_digit        = digits[-1]   # start year
     second_last_digit = digits[-2]   # start month
-    target_year  = DIGIT_TO_YEAR[last_digit]
-    start_month  = 10 if second_last_digit == '0' else int(second_last_digit)
-    town_values = [int(d) for d in digits] 
-    return target_year, start_month, list(set(town_values))
+    start_year = DIGIT_TO_YEAR[last_digit]
+    start_month = 10 if second_last_digit == 0 else second_last_digit
+    start_time = convert_year_month_to_time(start_year, start_month)
+    town_values = set(digits)
+    return start_time, list(town_values)
 
-def convert_year_month_to_month(year, month):
+def convert_year_month_to_month(year: int, month: int) -> int:
     return year*12 + month -1 
 
-def convert_year_month_to_time(year, month):
-    return convert_year_month_to_month(year, month) - convert_year_month_to_month(2015, 1)
+def convert_year_month_to_time(year: int, month: int, base: tuple[int,int] = (2015, 1)) -> int:
+    return convert_year_month_to_month(year, month) - convert_year_month_to_month(*base)
 
-def convert_time_to_month_year(time):
+def convert_time_to_month_year(time: int) -> tuple[int, str]:
     time+=convert_year_month_to_month(2015, 1)
     return (int(time//12) , month_fill(int((time%12) + 1)))
 
-def getQueryParameters(x,mat_id):
-    start_year, start_month, town_values = decode_matric(mat_id)
-    start_time = convert_year_month_to_time(start_year, start_month)
-    end_time = min(start_time + x-1, convert_year_month_to_time(2025, 12))
-    return start_time, end_time, town_values
+def get_end_time(x: int, start_time: TimeInt) -> TimeInt:
+    return min(start_time + x-1, convert_year_month_to_time(2025, 12))
 
 #condition to be fed as on_hit_row_fn 
 def reduce_upper_bound(condition, val):

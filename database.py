@@ -3,7 +3,7 @@ from typing import List
 from column_store import ColumnObject, ZoneMap, Indexes
 from writer import Writer
 from search import Search
-from common_utils import ConditionHandler, getQueryParameters, reduce_upper_bound
+from common_utils import ConditionHandler, TimeInt, TownInt, reduce_upper_bound
 from external_sorting import ExternalSorting
 from indexdatastructure import IndexDataStucture
 
@@ -62,8 +62,7 @@ class DataBase:
         self.writer.write(output_names, rtn)
         
         
-    def query(self, x, y, mat_id):
-        start_time, end_time, town_values= getQueryParameters(x,mat_id)
+    def query(self, x: int, y: int, start_time: TimeInt, end_time: TimeInt, town_values: list[TownInt]) -> tuple[int, TimeInt, int]:
         town_index_ds = [ColumnObject.index_datastructure.search_node([t]) for t in town_values]
         rtn = -1 
         price_per_area_condition = [0, 4725] 
@@ -81,4 +80,4 @@ class DataBase:
                                 time = t 
                                 area = values[1] 
                                 rtn = tmp 
-        return rtn, time, area, start_time
+        return rtn, time, area
