@@ -10,6 +10,7 @@ def get_generated_file(name):
     return name.replace(".csv", "_generated.csv")
 import os 
 if __name__ == "__main__":
+    count = 0 
     for file in os.listdir("."):
         # pick only original files (not generated ones)
         if file.startswith("ScanResult_U") and file.endswith(".csv") and "_generated" not in file:
@@ -17,6 +18,7 @@ if __name__ == "__main__":
             # check if generated file exists
             if not os.path.exists(generated):
                 raise FileNotFoundError(f"Missing generated file for {file}")
+            count+=1 
+            print(f"comparing {file} against {generated}")
             assert csv_equal(file, generated), f"ERROR comparing {file}"
-
-    print("ALL GOOD ✅")
+    print(f"ALL GOOD ✅ for {count} generated files")

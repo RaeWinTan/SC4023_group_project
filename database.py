@@ -8,7 +8,7 @@ from external_sorting import ExternalSorting
 from indexdatastructure import IndexDataStucture
 
 class DataBase:
-    
+    QUERY_CALLED = 0 
     def __init__(self, column_names: str, data_types: list[DataType]):
         self.column_stores: dict[str, ColumnObject] = dict()
         for i, name in enumerate(column_names):
@@ -17,7 +17,11 @@ class DataBase:
         self.size = 0 
         self.indexes: dict[tuple[str, ...] | str, Indexes] = OrderedDict()
         self.zone_maps: dict[tuple[str, ...], ZoneMap] = OrderedDict()
-
+    
+    @classmethod 
+    def get_query_called(cls):
+        return cls.QUERY_CALLED
+    
     def load_data(self, data):
         assert set(data.keys())==set(self.column_stores.keys()), "All columns must match columns in database"
         self.size += 1 
@@ -28,20 +32,20 @@ class DataBase:
     def compress_column(self, column_name, hm):
         self.column_stores[column_name].make_compress(hm)
 
-    def index_columns(self, indexes:List[List[str]], agg_fn,ct_arr):
-        ct = len(ct_arr)
+    def index_columns(self, sorting_order_of_precedence:List[List[str]], aggregate_fns, index_datastructure_sizes):
+        ct = len(index_datastructure_sizes)
         krr = [] 
-        for ic, col in enumerate(indexes):
+        for ic, col in enumerate(sorting_order_of_precedence):
             key = tuple(col) if len(col)>1 else col[0]
-            self.indexes[key] = Indexes([self.column_stores[c] for c in col], agg_fn[ic])
+            self.indexes[key] = Indexes([self.column_stores[c] for c in col], aggregate_fns[ic])
             krr.append(key)
         ExternalSorting.index_sorting(self.size, [self.indexes[k] for k in krr], self.column_stores)
         index_arr = [self.indexes[krr[i]] for i in range(ct)]
-        ColumnObject.set_index_datastructure(IndexDataStucture(index_arr, ct_arr))
+        ColumnObject.set_index_datastructure(IndexDataStucture(index_arr, index_datastructure_sizes))
         
-    def zone_map_columns(self, index: tuple[str,...], aggregate_fn):
-        obj = self.indexes[index]
-        self.zone_maps[index] = ZoneMap(obj, aggregate_fn)
+    def zone_map_columns(self, index_name: tuple[str,...], aggregate_fn):
+        obj = self.indexes[index_name]
+        self.zone_maps[index_name] = ZoneMap(obj, aggregate_fn)
 
     def write_data(self, x,y,row_number, columns,aggregation_columns, aggregation_functions, data_types,
                    output_names):
@@ -60,9 +64,9 @@ class DataBase:
             if isinstance(tmp, tuple): rtn.extend(list(tmp))
             else:rtn.append(tmp)
         self.writer.write(output_names, rtn)
-        
-        
+
     def query(self, x: int, y: int, start_time: TimeInt, end_time: TimeInt, town_values: list[TownInt]) -> tuple[int, TimeInt, int]:
+        DataBase.QUERY_CALLED+=1
         town_index_ds = [ColumnObject.index_datastructure.search_node([t]) for t in town_values]
         rtn = -1 
         price_per_area_condition = [0, 4725] 
