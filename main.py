@@ -51,7 +51,7 @@ db = DataBase(column_names, column_types)
 for row_dict in read_processed_rows("ResalePricesSingapore.csv"): db.load_data(row_dict)
 #database preprocessing on selected columns
 db.compress_column("town", town_to_digit) 
-db.index_columns(sorting_order_of_precedence=[["town"], ["time"], ["floor_area_sqm"], ["resale_price", "floor_area_sqm"]],
+db.index_columns(sorting_order_of_precedence=[("town",), ("time",), ("floor_area_sqm",), ("resale_price", "floor_area_sqm")],
                  aggregate_fns=[lambda a: a]*3 + [lambda a,b: (a*1.0)/b],
                  index_datastructure_sizes=[11, 132])#index_datastructures only created for first two indexes
 db.zone_map_columns(index_name=("resale_price", "floor_area_sqm"), aggregate_fn = MinMax)

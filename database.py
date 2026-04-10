@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import List
+from collections.abc import Iterable, Sequence, Sized
+from typing import Any, List
 from column_store import ColumnObject, DataType, ZoneMap, Indexes
 from writer import Writer
 from search import Search
@@ -32,16 +33,35 @@ class DataBase:
     def compress_column(self, column_name, hm):
         self.column_stores[column_name].make_compress(hm)
 
-    def index_columns(self, sorting_order_of_precedence:List[List[str]], aggregate_fns, index_datastructure_sizes):
-        ct = len(index_datastructure_sizes)
-        krr = [] 
-        for ic, col in enumerate(sorting_order_of_precedence):
-            key = tuple(col) if len(col)>1 else col[0]
-            self.indexes[key] = Indexes([self.column_stores[c] for c in col], aggregate_fns[ic])
-            krr.append(key)
-        ExternalSorting.index_sorting(self.size, [self.indexes[k] for k in krr], self.column_stores)
-        index_arr = [self.indexes[krr[i]] for i in range(ct)]
+    def index_columns(self, sorting_order_of_precedence:list[tuple[str, ...]], aggregate_fns, index_datastructure_sizes: Sequence[int]):
+        """
+        Creates a clustered sparse/dense primary index over the database.
+        Args
+        ====
+            sorting_order_of_precedence: list[tuple[str]]
+                determines the *source* columns to sort on. They can either be single columns or compound columns.
+            aggregate_fns: list[Callable]
+                each entry in sorting_order_of_precedence can specify either a single column or multiple columns.
+                entries will be transformed by the provided aggregate_fns, which is particularly helpful for combining
+                multiple columns into one.
+                The underlying data will be sorted according to the projected columns.
+            index_datastructure_sizes: Sequence[int]
+                Number of projected columns to use for the index and number of distinct values per column. 
+                This will use the first N projected columns to form a N-tier index, where tier 1 is based
+                on the first projected column, teir 2 is the second and so on...
+        """
+        sort_map: dict[tuple[str, ...] | str, Indexes[Any]] = dict()
+        # transform each entry into projected columns
+        # add projected columns to the sort order
+        for col, agg in zip(sorting_order_of_precedence, aggregate_fns):
+            key = col[0] if len(col) == 1 else col
+            sort_map[key] = Indexes([self.column_stores[c] for c in col], agg)
+        # sort all columns based on the index_map
+        ExternalSorting.index_sorting(self.size, sort_map.values(), self.column_stores)
+        # the index map is constructed from the first N projected columns
+        index_arr = list(sort_map.values())[:len(index_datastructure_sizes)] # python obeys insertion-order
         ColumnObject.set_index_datastructure(IndexDataStucture(index_arr, index_datastructure_sizes))
+        self.indexes = sort_map
         
     def zone_map_columns(self, index_name: tuple[str,...], aggregate_fn):
         obj = self.indexes[index_name]
