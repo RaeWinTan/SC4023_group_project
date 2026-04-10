@@ -46,8 +46,9 @@ def getQueryParameters(x,mat_id):
 
 #condition to be fed as on_hit_row_fn 
 def reduce_upper_bound(condition, val):
-    condition[1] = val 
-    return 
+    return
+    #condition[1] = val 
+    #return 
 
 #HANDLER CONTAINING LOGIC TO FACILITATE CHANGE CONDITIONS 
 class ConditionHandler:
@@ -58,8 +59,9 @@ class ConditionHandler:
         self.call_back_names = call_backs
         self.on_hit_row_fn = on_hit_row_fn
     def __call__(self, val):
-        self.call_back_fun_idx = min(len(self.call_back_names)-1, self.call_back_fun_idx+1)
+        #self.call_back_fun_idx = min(len(self.call_back_names)-1, self.call_back_fun_idx+1)
         self.on_hit_row_fn(self.condition, val)
+        
         
     def get_call_back_name(self):
         return self.call_back_names[self.call_back_fun_idx]

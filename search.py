@@ -32,7 +32,7 @@ class Search:
         return rtn 
     
     @staticmethod
-    def zone_map_search(zone_maps,l,r, price_per_area_handler: ConditionHandler):
+    def zone_map_search(zone_maps,l,r, price_per_area_handler: ConditionHandler, mn_sqm):
         indexes = zone_maps.indexes 
         idx = l 
         rtn = -1 
@@ -41,7 +41,9 @@ class Search:
             if zone_maps.checkInside(idx, price_per_area_handler.condition):#check if in side zone then check 
                 for i in range(idx, nxtIdx):
                     if indexes.comparator_callbacks[price_per_area_handler.get_call_back_name()](i, price_per_area_handler.condition):
-                        rtn = i
-                        price_per_area_handler(indexes.get(i))
+                        tmp = indexes.get(i)
+                        if tmp <mn_sqm:
+                            mn_sqm = tmp 
+                            rtn = i 
             idx = nxtIdx
-        return rtn 
+        return rtn, mn_sqm 

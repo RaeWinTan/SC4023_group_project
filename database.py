@@ -69,6 +69,7 @@ class DataBase:
         start_time, end_time, town_values= getQueryParameters(x,mat_id)
         town_index_ds = [ColumnObject.index_datastructure.search_node([t]) for t in town_values]
         rtn = -1 
+        mn_area = float("inf")
         price_per_area_condition = [0, 4725] 
         price_per_area_handler = ConditionHandler(price_per_area_condition, ["isLesserThanEqualToUpperBound", "isLesserThanUpperBound"], reduce_upper_bound)
         for l,r,time_ds in town_index_ds:
@@ -78,6 +79,8 @@ class DataBase:
                     if (lt,rt)!=(-1,-1):
                         floor_area_start_idx = Search.bisect_left(self.indexes["floor_area_sqm"], y, lt, rt)
                         if floor_area_start_idx<=rt:
-                            tmp = Search.zone_map_search(self.zone_maps[("resale_price", "floor_area_sqm")], floor_area_start_idx, rt, price_per_area_handler)
-                            if tmp!=-1: rtn = tmp 
+                            tmp, price_per_sqm = Search.zone_map_search(self.zone_maps[("resale_price", "floor_area_sqm")], floor_area_start_idx, rt, price_per_area_handler, mn_area)
+                            if tmp!=-1: 
+                                rtn = tmp 
+                                mn_area = price_per_sqm
         return rtn 
