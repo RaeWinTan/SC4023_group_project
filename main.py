@@ -4,7 +4,7 @@ from collections import defaultdict
 from common_utils import MinMax, TimeInt, decode_matric, get_end_time, normalize_number, convert_time_to_month_year
 from parsing_input import read_processed_rows
 from math import floor 
-
+"""
 matids = [
     "U1234567A",
     "U7654321B",
@@ -31,6 +31,8 @@ matids = [
     "U2221633B",
     "U2240731L",
 ]
+"""
+matids = ["U2240731L"]
 town_to_digit = defaultdict(lambda: 10, {
     "BEDOK": 0,
     "BUKIT PANJANG": 1,

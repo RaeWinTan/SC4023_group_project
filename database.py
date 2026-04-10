@@ -93,12 +93,12 @@ class DataBase:
         price_per_area_handler = ConditionHandler(price_per_area_condition, ["isLesserThanEqualToUpperBound", "isLesserThanUpperBound"], reduce_upper_bound)
         time,area=-1, -1
         for l,r,time_ds in town_index_ds:
-            if (l,r)!=(-1,-1):
+            if (l,r)!=(-1,-1):#skip missing towns
                 for t in range(start_time, end_time+1):
                     lt,rt,_ = time_ds[t]
-                    if (lt,rt)!=(-1,-1):
+                    if (lt,rt)!=(-1,-1):#skip missing time for that particular town in question 
                         floor_area_start_idx = Search.bisect_left(self.indexes["floor_area_sqm"], y, lt, rt)
-                        if floor_area_start_idx<=rt:
+                        if floor_area_start_idx<=rt:#when there is such a floor_area_sqm >=y
                             tmp, values = Search.zone_map_search(self.zone_maps[("resale_price", "floor_area_sqm")], floor_area_start_idx, rt, price_per_area_handler)
                             if tmp!=-1: 
                                 time = t 
