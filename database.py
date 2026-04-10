@@ -8,7 +8,7 @@ from external_sorting import ExternalSorting
 from indexdatastructure import IndexDataStucture
 
 class DataBase:
-    
+    QUERY_CALLED = 0 
     def __init__(self, column_names, data_types):
         self.column_stores = dict()
         for i, name in enumerate(column_names):
@@ -17,7 +17,9 @@ class DataBase:
         self.size = 0 
         self.indexes = OrderedDict()
         self.zone_maps = OrderedDict()
-
+    @classmethod 
+    def get_query_called(cls):
+        return cls.QUERY_CALLED
     def load_data(self, data):
         assert set(data.keys())==set(self.column_stores.keys()), "All columns must match columns in database"
         self.size += 1 
@@ -63,6 +65,7 @@ class DataBase:
         
         
     def query(self, x, y, mat_id):
+        DataBase.QUERY_CALLED+=1
         start_time, end_time, town_values= getQueryParameters(x,mat_id)
         town_index_ds = [ColumnObject.index_datastructure.search_node([t]) for t in town_values]
         rtn = -1 

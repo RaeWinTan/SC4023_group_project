@@ -25,7 +25,7 @@ for row_dict in read_processed_rows("ResalePricesSingapore.csv"): db.load_data(r
 db.compress_column("town", town_to_digit) 
 db.index_columns([["town"], ["time"], ["floor_area_sqm"], ["resale_price", "floor_area_sqm"]], [lambda a: a]*3 + [lambda a,b: (a*1.0)/b],[11, 132])
 db.zone_map_columns(("resale_price", "floor_area_sqm"), MinMax)
-matids = ["U2340246H", "U2240731L"]
+matids = ["U2240731L"]
 query_count = (9-1)*(151 - 80)*len(matids)
 total_zone_read = 0 
 total_column_read = 0
@@ -50,6 +50,23 @@ for MATID in matids:
                             normalize_number, str, str, round],
                             ["(x, y)", "Year","Month","Town", "Block","Floor_Area", "Flat_Model", "Lease_Commence_Date"	,"Price_Per_Square_Meter"])
     db.writer.close()
-print(f"total queries: {query_count}")
-print(f"total zone reads: {total_zone_read} total column reads: {total_column_read}")
-print(f"average zone reads per query: {total_zone_read/query_count:2f} | average column reads: {total_column_read/query_count:2f}")
+
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
+
+print(f"total queries: {GREEN}{query_count}{RESET}")
+print(f"total db.query() calls: {GREEN}{DataBase.get_query_called()}{RESET}")
+print(f"total db.query() savings: {GREEN}{query_count-DataBase.get_query_called()}{RESET}")
+
+
+print(
+    f"total zone reads: {CYAN}{total_zone_read}{RESET} "
+    f"total column reads: {CYAN}{total_column_read}{RESET}"
+)
+
+print(
+    f"average zone reads per query: {YELLOW}{total_zone_read/query_count:.2f}{RESET} | "
+    f"average column reads per query: {YELLOW}{total_column_read/query_count:.2f}{RESET}"
+)
