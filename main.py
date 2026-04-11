@@ -30,7 +30,7 @@ query_count = (9-1)*(151 - 80)*len(matids)
 total_zone_read = 0 
 total_column_read = 0
 for MATID in matids:
-    db.writer.setCsvWriter(f"ScanResult_{MATID}_generated.csv") 
+    db.writer.setCsvWriter(f"ScanResult_{MATID}_generated.csv")
     for x in range(1, 9):
         for y in range(80, 151):
             before_zone_read = ZoneMap.getZoneRead()
