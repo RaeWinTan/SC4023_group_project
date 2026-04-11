@@ -68,6 +68,10 @@ class Indexes:
      
     def get(self, idx):
         return self.agg_fn(*[c_obj.get(idx) for c_obj in self.column_objects])
+    
+    def get_with_val(self, idx):
+        val = [c_obj.get(idx) for c_obj in self.column_objects]
+        return self.agg_fn(*val), val
      
     def isLesserThanEqualToUpperBound(self, idx, rg):
         return self.get(idx)<=rg[1]

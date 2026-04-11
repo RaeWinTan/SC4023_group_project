@@ -32,14 +32,14 @@ class Search:
         return rtn 
     
     @staticmethod
-    def zone_map_search(zone_maps,l,r, price_per_area_handler: ConditionHandler, mn_sqm):
+    def zone_map_search(zone_maps,l,r, price_per_area_handler: ConditionHandler, mn_sqm,y):
         indexes = zone_maps.indexes 
         idx = l 
         rtn = -1 
         while idx <=r:
             if indexes.comparator_callbacks[price_per_area_handler.get_call_back_name()](idx, price_per_area_handler.condition):
-                tmp = indexes.get(idx)
-                if tmp <mn_sqm:
+                tmp,val = indexes.get_with_val(idx)
+                if tmp <mn_sqm and val[1]>=y:
                     mn_sqm = tmp 
                     rtn = idx 
             idx+=1 

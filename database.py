@@ -77,9 +77,9 @@ class DataBase:
                 for t in range(start_time, end_time+1):
                     lt,rt,_ = time_ds[t]
                     if (lt,rt)!=(-1,-1):
-                        floor_area_start_idx = Search.bisect_left(self.indexes["floor_area_sqm"], y, lt, rt)
+                        floor_area_start_idx = lt
                         if floor_area_start_idx<=rt:
-                            tmp, price_per_sqm = Search.zone_map_search(self.zone_maps[("resale_price", "floor_area_sqm")], floor_area_start_idx, rt, price_per_area_handler, mn_area)
+                            tmp, price_per_sqm = Search.zone_map_search(self.zone_maps[("resale_price", "floor_area_sqm")], floor_area_start_idx, rt, price_per_area_handler, mn_area, y)
                             if tmp!=-1: 
                                 rtn = tmp 
                                 mn_area = price_per_sqm
