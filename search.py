@@ -37,10 +37,13 @@ class Search:
         idx = l 
         rtn = -1 
         while idx <=r:
-            if indexes.comparator_callbacks[price_per_area_handler.get_call_back_name()](idx, price_per_area_handler.condition):
-                tmp,val = indexes.get_with_val(idx)
-                if tmp <mn_sqm and val[1]>=y:
-                    mn_sqm = tmp 
-                    rtn = idx 
-            idx+=1 
+            nxtIdx = min(zone_maps.nextIdx(idx), r+1)
+            if zone_maps.checkInside(idx, price_per_area_handler.condition):#check if in side zone then check 
+                for i in range(idx, nxtIdx):
+                    if indexes.comparator_callbacks[price_per_area_handler.get_call_back_name()](i, price_per_area_handler.condition):
+                        tmp,vrr = indexes.get_with_val(i)
+                        if tmp <mn_sqm and vrr[1]>=y:
+                            mn_sqm = tmp 
+                            rtn = i 
+            idx = nxtIdx
         return rtn, mn_sqm 
