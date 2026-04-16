@@ -7,13 +7,13 @@ def csv_equal(file1, file2):
     return reader1 == reader2
 
 def get_generated_file(name):
-    return name.replace(".csv", "_generated.csv")
+    return name.replace("Expected_", "")
 import os 
 if __name__ == "__main__":
     count = 0 
     for file in os.listdir("."):
         # pick only original files (not generated ones)
-        if file.startswith("ScanResult_U") and file.endswith(".csv") and "_generated" not in file:
+        if file.startswith("Expected_ScanResult_U") and file.endswith(".csv") and "_generated" not in file:
             generated = get_generated_file(file)
             # check if generated file exists
             if not os.path.exists(generated):

@@ -75,6 +75,10 @@ class DataBase:
 
     def write_data(self, x,y,row_number, columns,aggregation_columns, aggregation_functions, data_types,
                    output_names):
+        if row_number == -1:#no solution case
+            rtn = [f"({x}, {y})", "No result"]+ [""]*(len(output_names)-2)
+            self.writer.write(output_names, rtn)
+            return 
         values = [] 
         for name in columns:
             cs:ColumnObject = self.column_stores[name]

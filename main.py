@@ -8,6 +8,7 @@ from common_utils import MinMax, TimeInt, decode_matric, get_end_time, \
 
 from parsing_input import read_processed_rows
 from math import floor 
+matids = ["U2240731L"]
 """
 matids = [
     "U1234567A",
@@ -36,7 +37,7 @@ matids = [
     "U2240731L",
 ]
 """
-matids = ["U2240731L"]
+
 town_to_digit = defaultdict(lambda: 10, {
     "BEDOK": 0,
     "BUKIT PANJANG": 1,
@@ -69,7 +70,7 @@ total_zone_read = 0
 total_column_read = 0
 for MATID in matids:
     start_time, towns = decode_matric(MATID)
-    db.writer.setCsvWriter(f"ScanResult_{MATID}_generated.csv") 
+    db.writer.setCsvWriter(f"ScanResult_{MATID}.csv") 
     #dynamic programming to reduce unneccessary db.query() calls
     dp = [[float("inf")]*8 for _ in range(151-80)]
     for x in range(8,0,-1):#((8,0, -1))
@@ -97,15 +98,16 @@ for MATID in matids:
     for x in range(1, 9):
         for y in range(80, 151):
             rtn = dp[y-80][x-1]
-            if rtn != -1:
-                db.write_data(x, y, rtn,
-                            ["time", "town", "block", "floor_area_sqm",
-                            "flat_model", "lease_commence_date"],
-                            [["resale_price", "floor_area_sqm"]], [
-                                lambda a, b: (a*1.0)/b],
-                            [convert_time_to_month_year, str, str,
-                            normalize_number, str, str, round],
-                            ["(x, y)", "Year","Month","Town", "Block","Floor_Area", "Flat_Model", "Lease_Commence_Date"	,"Price_Per_Square_Meter"])
+            db.write_data(x, y, rtn,
+                ["time", "town", "block", "floor_area_sqm",
+                "flat_model", "lease_commence_date"],
+                [["resale_price", "floor_area_sqm"]], [
+                    lambda a, b: (a*1.0)/b],
+                [convert_time_to_month_year, str, str,
+                normalize_number, str, str, round],
+                ["(x, y)", "Year","Month","Town", "Block","Floor_Area", "Flat_Model", "Lease_Commence_Date"	,"Price_Per_Square_Meter"])
+
+
     db.writer.close()
 GREEN = "\033[92m"
 CYAN = "\033[96m"
