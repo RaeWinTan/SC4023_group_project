@@ -11,6 +11,41 @@ valid_matric = re.compile(r"^[A-Z]\d{7}[A-Z]", re.IGNORECASE)
 Regular expression to check if a string is a valid matriculation number, which we
 assume to be one alpha seven digits one alpha
 """
+def is_float(x):
+    try:
+        float(x)
+        return True
+    except (ValueError, TypeError):
+        return False
+#CALLBACKS FOR DATA VALIDATION
+def required_range(a,b):
+    def inner(val):
+        nonlocal a, b 
+        if is_float(val):
+            val = float(val)
+            return a<=val<=b, val 
+        else: return False, "" 
+    return inner
+def required_string(val): 
+    if len(val.strip())==0:
+        return False, "" 
+    else:
+        return True, val 
+def default_string(val):
+    def inner(x):
+        nonlocal val 
+        if len(x.strip())==0:
+            return True, val 
+        return True, x 
+    return inner 
+def required_above_zero(x):
+    if is_float(x):
+        return float(x)>0, x 
+    else:
+        return False, 0
+
+
+        
 
 #CALLBACKS MOSTLY USED FOR ZONEMAPS ENCODING
 def MinMax(arr: list[tuple[int, ...]]):

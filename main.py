@@ -1,7 +1,11 @@
 from database import DataBase
 from column_store import DataType, ZoneMap, ColumnObject
 from collections import defaultdict
-from common_utils import MinMax, TimeInt, decode_matric, get_end_time, normalize_number, convert_time_to_month_year
+from common_utils import MinMax, TimeInt, decode_matric, get_end_time, \
+    normalize_number, convert_time_to_month_year, \
+    required_range,convert_year_month_to_time, \
+    required_string, default_string,required_above_zero
+
 from parsing_input import read_processed_rows
 from math import floor 
 """
@@ -49,7 +53,9 @@ column_names = ["time",          "town",         "block",        "street_name",
                 "flat_type",    "flat_model",   "storey_range", "floor_area_sqm",    "lease_commence_date", "resale_price"]
 column_types = [DataType.INTEGER, DataType.STRING, DataType.STRING, DataType.STRING,
                 DataType.STRING, DataType.STRING, DataType.STRING, DataType.INTEGER, DataType.STRING, DataType.INTEGER]
-db = DataBase(column_names, column_types)
+column_requirements = [required_range(convert_year_month_to_time(2015, 1), convert_year_month_to_time(2025, 12)), \
+                      required_string, default_string(""), default_string(""), default_string(""), default_string(""), default_string(""), required_above_zero, default_string(""), required_above_zero]
+db = DataBase(column_names, column_types, column_requirements)
 for row_dict in read_processed_rows("ResalePricesSingapore.csv"): db.load_data(row_dict)
 #database preprocessing on selected columns
 db.compress_column("town", town_to_digit) 

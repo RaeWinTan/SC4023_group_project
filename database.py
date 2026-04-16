@@ -10,7 +10,8 @@ from indexdatastructure import IndexDataStucture
 
 class DataBase:
     QUERY_CALLED = 0 
-    def __init__(self, column_names: str, data_types: list[DataType]):
+    def __init__(self, column_names: str, data_types: list[DataType], requirements):
+        self.column_requirements = {c:requirements[i] for i,c in enumerate(column_names)}
         self.column_stores: dict[str, ColumnObject] = dict()
         for i, name in enumerate(column_names):
             self.column_stores[name] = ColumnObject(name, data_types[i])
@@ -25,10 +26,15 @@ class DataBase:
     
     def load_data(self, data):
         assert set(data.keys())==set(self.column_stores.keys()), "All columns must match columns in database"
-        self.size += 1 
+        data_items = [(name, v) for name, v in data.items()] 
+        for name, v in data_items:
+            accepted, val =  self.column_requirements[name](v)
+            if not accepted: return # do not add that row to the data store
+            data[name] = val 
         for name, v in data.items():
             cs:ColumnObject = self.column_stores[name]
             cs.load(v)
+        self.size += 1
 
     def compress_column(self, column_name, hm):
         self.column_stores[column_name].make_compress(hm)

@@ -12,11 +12,20 @@ def read_processed_rows(filepath):
 
         for row in reader:
             row_dict = dict(zip(headers, row))
-
-            month_year = row_dict["month"]
-            del row_dict["month"]
+            month_year = row_dict.get("month", "").strip()
+            if not month_year:
+                continue
+            if month_year.count("-") != 1:
+                continue
             mon_str, yy = month_year.split("-")
-            month = month_map[mon_str]
+            if mon_str not in month_map:
+                continue
+            if not (yy.isdigit() and len(yy) == 2):
+                continue
             year = int("20" + yy)
+            if year < 2000 or year > 2100:
+                continue
+            del row_dict["month"]
+            month = month_map[mon_str]
             row_dict["time"] = convert_year_month_to_time(year, month)
-            yield row_dict  
+            yield row_dict
